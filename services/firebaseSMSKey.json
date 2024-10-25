@@ -1,4 +1,4 @@
-{
+  {
     "type": "service_account",
     "project_id": "ultron-b2d6c",
     "private_key_id": "eff91f2501b0134d92b645f21f7e65b62680b7a3",
@@ -11,4 +11,3 @@
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-h6a3j%40ultron-b2d6c.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com"
   }
-  

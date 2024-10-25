@@ -6,12 +6,14 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const transporter = require("../services/mailService")
-const admin = require('firebase-admin');
-const serviceAccount = require('../services/firebaseSMSKey.json');
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://ultron-b2d6c.firebaseio.com"
-});
+// const admin = require('firebase-admin');
+// var serviceAccount = require('../services/firebaseSMSKey.json');
+// const axios = require('axios');
+require('dotenv').config();
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount)
+// });
+const sendSms = require("../services/sendSMS")
 
 // Register
 router.post('/register', async (req, res) => {
@@ -111,16 +113,62 @@ router.post('/reset-password', async (req, res) => {
         } else {
             // OTP for phone number via Firebase
             const phoneNumber = id;
-            const testSMS = await admin.messaging().send({
-                token: phoneNumber,
-                notification: {
-                    title: 'Your OTP for Verification',
-                    body: `Your OTP is: ${otp}`,
-                },
-            });
+            // firebase admin
+            // const testSMS = await admin.messaging().send({
+            //     token: phoneNumber,
+            //     notification: {
+            //         title: 'Your OTP for Verification',
+            //         body: `Your OTP is: ${otp}`,
+            //     },
+            // });
 
-            console.log('OTP sent:', testSMS);
-            res.status(200).json({ message: `OTP ${otp} sent to your mobile number` });
+            // Fast to sms
+            // const response = await axios.get('https://www.fast2sms.com/dev/bulk', {
+            //     params: {
+            //         authorization: process.env.FAST2SMS_API_KEY,
+            //         variables_values: `Your OTP is ${otp}`,
+            //         route: 'otp',
+            //         numbers: phoneNumber
+            //     }
+            // });
+            // Send the OTP SMS
+
+            // const client = require('twilio')(accountSid, authToken);
+            // client.messages
+            //     .create({
+            //         body: `Hello from Node Your OTP is: ${otp}`,
+            //         to: `+919600449077`,
+            //         from:`+18643975936`
+            //     })
+            //     .then((message) => {
+            //         console.log(message.sid),
+            //         res.status(200).json({ message: `OTP ${otp} sent to your mobile number` });
+            //     });
+            const accountSid = process.env.TWILIO_ACCOUNT_SID;
+            const authToken = process.env.TWILIO_AUTH_TOKEN;
+            const client = require('twilio')(accountSid, authToken);
+            try {
+                const message = await client.messages.create({
+                    body: `Hello from Node Your OTP is: ${otp}`,
+                    to: `+91${phoneNumber}`,
+                    from: `+18643975936`
+                });
+                console.log(message);
+                res.status(200).json({ message: `OTP ${otp} sent to your mobile number` });
+            } catch (error) {
+                // You can implement your fallback code here
+                console.error(error);
+                throw error;
+            }
+
+            // sendSms(phoneNumber, `Your OTP is: ${otp}`)
+            //     .then((sid) => {
+            //         console.log(`SMS sent with SID: ${sid}`),
+            //             res.status(200).json({ message: `OTP ${otp} sent to your mobile number` });
+            //     })
+            //     .catch(error => console.error('Failed to send SMS:', error));
+
+            // console.log('OTP sent:', testSMS);
 
             // Generate a custom token (Firebase requires a token or session for OTP)
             // const otpSession = await admin.auth().createSessionCookie(phoneNumber, { expiresIn: 600000 });
